@@ -63,7 +63,8 @@ public final class TestFixtures {
                 new BigDecimal("1428"),
                 "Thank you.",
                 companyDetailsDto(),
-                customerDto()
+                customerDto(),
+                false
         );
     }
 

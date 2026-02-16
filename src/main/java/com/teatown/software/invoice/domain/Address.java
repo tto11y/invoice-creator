@@ -17,7 +17,7 @@ public record Address(
             return switch (countryCode) {
                 case "AT" -> "Austria";
                 case "ES" -> "Spain";
-                default -> throw new IllegalStateException("Unexpected value: " + countryCode);
+                default -> countryCode;
             };
         }
 
@@ -25,7 +25,7 @@ public record Address(
             return switch (countryCode) {
                 case "AT" -> "Austria";
                 case "ES" -> "España";
-                default -> throw new IllegalStateException("Unexpected value: " + countryCode);
+                default -> countryCode;
             };
         }
 
