@@ -1,0 +1,39 @@
+{
+  "metrics": {
+    "url": "http://mimir:9009/otlp",
+    "basicAuth": {
+      "username": "",
+      "password": ""
+    }
+  },
+  "metrics_prom": {
+    "url": "http://prometheus:9090/api/v1/write",
+    "basicAuth": {
+      "username": "",
+      "password": ""
+    }
+  },
+  "logs": {
+        "url": "http://loki:3100/loki/api/v1/push",
+        "url_otlp": "http://loki:3100/otlp",
+        "basicAuth": {
+            "username": "",
+            "password": ""
+        }
+    },
+    "traces": {
+        "url": "http://tempo:4318",
+        "basicAuthToken": "",
+        "tls": {
+            "insecure": true,
+            "insecureSkipVerify": true
+        }
+    },
+    "profiles": {
+        "url": "http://pyroscope:4040",
+        "basicAuth": {
+            "username": "",
+            "password": ""
+        }
+    }
+}

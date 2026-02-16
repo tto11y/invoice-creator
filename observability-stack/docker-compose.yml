@@ -1,0 +1,119 @@
+services:
+  loki:
+    image: grafana/loki:3.0.0
+    command: -config.file=/etc/loki/local-config.yaml
+    #ports:
+      # the Loki receiver endpoints are reachable via 
+      # http://localhost:3100/loki/api/v1/push
+      # http://localhost:3100/otlp
+      #- "3100:3100"
+    # to prevent the environment variables http_proxy and https_proxy from interfering in the HTTP communication,
+    # we unset it manually
+    environment:
+      - https_proxy=
+      - HTTPS_PROXY=
+      - http_proxy=
+      - HTTP_PROXY=
+
+  prometheus:
+    image: prom/prometheus:v2.47.0
+    command:
+      - --web.enable-remote-write-receiver
+      - --config.file=/etc/prometheus/prometheus.yml
+    #ports:
+      # the remote_write endpoint is reachable via http://localhost:9090/api/v1/write"
+      #- "9090:9090"
+    # to prevent the environment variables http_proxy and https_proxy from interfering in the HTTP communication,
+    # we unset it manually
+    environment:
+      - https_proxy=
+      - HTTPS_PROXY=
+      - http_proxy=
+      - HTTP_PROXY=
+
+  tempo:
+    image: grafana/tempo:2.9.0
+    # target=all runs Tempo in monolithic mode
+    command: "-target=all -config.file=/etc/tempo.yaml"
+    # Tempo needs a configuration file to start
+    volumes:
+      - ./tempo-distributed/tempo.yaml:/etc/tempo.yaml
+    #ports:
+      #- "3200:3200" # for the querier (Grafana frontend)
+      #- "9411:9411"
+      #- "4318:4318" # OTLP HTTP => http://localhost:4318
+      #- "4317:4317" # OTLP gRPC => http://localhost:4317
+    # to prevent the environment variables http_proxy and https_proxy from interfering in the HTTP communication,
+    # we unset it manually
+    environment:
+      - https_proxy=
+      - HTTPS_PROXY=
+      - http_proxy=
+      - HTTP_PROXY=
+
+  grafana:
+    image: grafana/grafana:12.3.0-19020365962
+    entrypoint:
+      - sh
+      - -euc
+      - |
+        mkdir -p /etc/grafana/provisioning/datasources
+        cat <<EOF > /etc/grafana/provisioning/datasources/ds.yaml
+        apiVersion: 1
+        datasources:
+        - name: Loki
+          type: loki
+          orgId: 1
+          url: http://loki:3100
+          basicAuth: false
+          isDefault: false
+          version: 1
+          editable: false
+        - name: Prometheus
+          type: prometheus
+          orgId: 1
+          url: http://prometheus:9090
+          basicAuth: false
+          isDefault: true
+          version: 1
+          editable: false
+        - name: Tempo
+          type: tempo
+          url: http://tempo:3200
+          basicAuth: false
+          isDefault: false
+          version: 1
+          editable: false
+        EOF
+        /run.sh
+    ports:
+      - "3000:3000"
+    # to prevent the environment variables http_proxy and https_proxy from interfering in the HTTP communication,
+    # we unset it manually
+    environment:
+      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - https_proxy=
+      - HTTPS_PROXY=
+      - http_proxy=
+      - HTTP_PROXY=
+
+  alloy:
+    image: grafana/alloy:v1.11.1
+    command: "run --server.http.listen-addr=0.0.0.0:12345 --storage.path=/var/lib/alloy/data /etc/alloy/config.alloy"
+    volumes:
+      - ./alloy/config.alloy:/etc/alloy/config.alloy
+      - ./alloy/endpoints.json:/etc/alloy/endpoints.json
+    ports:
+      - "12345:12345" # for debug frontend
+      - "4318:4318" # OTLP HTTP => http://localhost:4318
+      - "4317:4317" # OTLP gRPC => http://localhost:4317
+    # to prevent the environment variables http_proxy and https_proxy from interfering in the HTTP communication,
+    # we unset it manually
+    environment:
+      - https_proxy=
+      - HTTPS_PROXY=
+      - http_proxy=
+      - HTTP_PROXY=
+

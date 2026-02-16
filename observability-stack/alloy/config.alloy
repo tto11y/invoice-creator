@@ -1,0 +1,111 @@
+// ============================= endpoints
+local.file "endpoints" {
+    // define endpoints and credentials
+    filename = "/etc/alloy/endpoints.json"
+}
+
+// ============================= o11ycol logs
+logging {
+	level = "info"
+    format = "logfmt"
+	write_to = [loki.process.o11ycol.receiver]
+}
+
+loki.process "o11ycol" {
+	forward_to = [loki.write.local.receiver]
+
+	stage.regex {
+		expression = "(level=(?P<log_level>[\\s]*debug|warn|info|error))"
+	}
+
+	stage.labels {
+		values = {
+			level = "log_level",
+		}
+	}
+}
+
+loki.write "local" {
+	endpoint {
+	    url = json_path(local.file.endpoints.content, ".logs.url")[0]
+
+        // The basic auth credentials for the Loki instance.
+        // basic_auth {
+        //     username = json_path(local.file.endpoints.content, ".logs.basicAuth.username")[0]
+        //     password = json_path(local.file.endpoints.content, ".logs.basicAuth.password")[0]
+        // }
+    }
+}
+
+// ============================= OTLP receiver
+otelcol.receiver.otlp "default" {
+    grpc {
+	    endpoint = "0.0.0.0:4317"
+	}
+
+	http {
+	    endpoint = "0.0.0.0:4318"
+	}
+
+	output {
+		metrics = [otelcol.processor.batch.default.input]
+		logs    = [otelcol.processor.batch.default.input]
+		traces  = [otelcol.processor.batch.default.input]
+	}
+}
+
+// ============================= OTLP processor
+otelcol.processor.batch "default" {
+	send_batch_size     = 2000
+	send_batch_max_size = 4000
+	timeout             = "200ms"
+
+	output {
+		metrics = [otelcol.exporter.prometheus.prom_metrics.input]
+		logs    = [otelcol.exporter.otlphttp.logs.input]
+		traces  = [otelcol.exporter.otlphttp.traces.input]
+	}
+}
+
+// ============================= OTLP converter
+// metrics in OTLP format must be converted 
+// into Prometheus format before they can be pushed to a Prometheus remote_write endpoint
+otelcol.exporter.prometheus "prom_metrics" {
+	forward_to = [prometheus.remote_write.metrics_service.receiver]
+}
+
+// ============================= Prometheus remote write
+prometheus.remote_write "metrics_service" {
+    endpoint {
+        url = json_path(local.file.endpoints.content, ".metrics_prom.url")[0]
+
+        // basic_auth {
+        //   username = "admin"
+        //   password = "admin"
+        // }
+    }
+}
+
+// ============================= OTLP exporter
+otelcol.exporter.otlphttp "logs" {
+	client {
+		endpoint = json_path(local.file.endpoints.content, ".logs.url_otlp")[0]
+	}
+
+	encoding = "json"
+	sending_queue {
+		num_consumers = 30
+		queue_size    = 1000
+	}
+}
+
+otelcol.exporter.otlphttp "traces" {
+	client {
+		endpoint = json_path(local.file.endpoints.content, ".traces.url")[0]
+	}
+
+	sending_queue {
+		num_consumers = 30
+		queue_size    = 1000
+	}
+}
