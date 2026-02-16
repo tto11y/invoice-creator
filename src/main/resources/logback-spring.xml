@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!-- imports the base configuration for Logback from Spring Boot -->
+    <include resource="org/springframework/boot/logging/logback/base.xml"/>
+
+    <!-- defines an additional appender called OTEL, which sends all log events to the OpenTelemetry API -->
+    <appender name="OTEL" class="io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender">
+    </appender>
+
+    <!-- LOG everything at INFO level -->
+    <!-- the appender 'OTEL' is added to the root logger, effectively sending all log entries to the OpenTelemetry API in addition to the console -->
+    <root level="info">
+        <appender-ref ref="OTEL"/>
+    </root>
+
+    <!-- LOG "com.teatown.software.springboot.demo.application.security*" at TRACE level -->
+    <logger name="com.teatown.software.springboot.demo.application.security" level="trace" additivity="false">
+        <appender-ref ref="OTEL"/>
+    </logger>
+
+</configuration>
