@@ -46,6 +46,7 @@ public class InvoiceRequestMapper {
                 .finalNotes(dto.finalNotes())
                 .companyDetails(toDomainCompanyDetails(dto.companyDetails()))
                 .customer(toDomainCustomer(dto.customer()))
+                .reverseCharge(dto.reverseCharge())
                 .build();
     }
 

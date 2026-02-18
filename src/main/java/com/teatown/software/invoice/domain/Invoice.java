@@ -20,7 +20,8 @@ public record Invoice(
         BigDecimal totalGrossPrice,
         String finalNotes,
         CompanyDetails companyDetails,
-        Customer customer
+        Customer customer,
+        Boolean reverseCharge
 ) {
 
     public static Builder builder() {
@@ -40,6 +41,7 @@ public record Invoice(
         private String finalNotes;
         private CompanyDetails companyDetails;
         private Customer customer;
+        private Boolean reverseCharge;
 
         public Builder invoiceDate(LocalDate invoiceDate) {
             this.invoiceDate = invoiceDate;
@@ -106,10 +108,15 @@ public record Invoice(
             return this;
         }
 
+        public Builder reverseCharge(Boolean reverseCharge) {
+            this.reverseCharge = reverseCharge;
+            return this;
+        }
+
         public Invoice build() {
             return new Invoice(invoiceDate, invoiceNumber, deliveryDate, dueDate, items,
                     totalNetPrice, vatRate, vatAbsolute, totalGrossPrice, finalNotes,
-                    companyDetails, customer);
+                    companyDetails, customer, reverseCharge);
         }
     }
 }
