@@ -133,15 +133,22 @@ public class OpenPdfInvoiceGenerator implements PdfGenerationPort {
     private float writeInvoiceDetails(final Document document, final Invoice invoice, final float fromY, final Locale locale) throws DocumentException {
         final var t = new PdfPTable(2);
         t.setWidthPercentage(100);
-        t.setSpacingAfter(34);
+        t.setSpacingAfter(13);
 
         t.addCell(customerAddressCellWithoutBorder(invoice.customer(), locale));
         t.addCell(invoiceMetaCell(invoice, locale));
 
-
         document.add(t);
 
         document.add(new Paragraph(" ", normalFont));
+
+        if (Boolean.TRUE.equals(invoice.reverseCharge())) {
+            final var p = new Paragraph(msg("invoice.pdf.reverseCharge", locale), headingFont);
+            p.setSpacingAfter(21);
+            document.add(p);
+            document.add(new Paragraph(" ", normalFont));
+        }
+
         return 0;
     }
 
@@ -205,7 +212,7 @@ public class OpenPdfInvoiceGenerator implements PdfGenerationPort {
     private float writeItemsTable(final Document document, final List<InvoiceItem> items, final float fromY, final Locale locale) throws DocumentException {
         document.add(new Paragraph(msg("invoice.pdf.positionDescription", locale), headingFont));
 
-        final float[] widths = { 8, 40, 8, 10, 12, 12 };
+        final float[] widths = {8, 40, 8, 10, 12, 12};
         final var table = new PdfPTable(widths);
 
         table.setSpacingBefore(10);
@@ -234,7 +241,7 @@ public class OpenPdfInvoiceGenerator implements PdfGenerationPort {
     }
 
     private float writeTotals(final Document document, final Invoice invoice, final float fromY, final Locale locale) throws DocumentException {
-        final float[] widths = { 8, 40, 8, 10, 12, 12 };
+        final float[] widths = {8, 40, 8, 10, 12, 12};
         final var table = new PdfPTable(widths);
 
         table.setWidthPercentage(100);
@@ -264,16 +271,6 @@ public class OpenPdfInvoiceGenerator implements PdfGenerationPort {
         return 0;
     }
 
-    private void writeBankDetails(final Document document, final CompanyDetails company, final float fromY, final Locale locale) throws DocumentException {
-        document.add(new Paragraph(msg("invoice.pdf.paymentDetails", locale), headingFont));
-        final var bank = company.bankAccount();
-        document.add(new Paragraph(msg("invoice.pdf.bank", locale) + " " + bank.bankName(), normalFont));
-        document.add(new Paragraph(msg("invoice.pdf.accountOwner", locale) + " " + bank.accountOwner(), normalFont));
-        document.add(new Paragraph(msg("invoice.pdf.iban", locale) + " " + bank.iban(), normalFont));
-        document.add(new Paragraph(msg("invoice.pdf.bic", locale) + " " + bank.bic(), normalFont));
-        document.add(new Paragraph(" ", normalFont));
-    }
-
     private void writeFinalNotes(final Document document, final String finalNotes, final Locale locale) throws DocumentException {
         if (finalNotes != null && !finalNotes.isBlank()) {
             document.add(new Paragraph(finalNotes, normalFont));
@@ -300,7 +297,7 @@ public class OpenPdfInvoiceGenerator implements PdfGenerationPort {
 
     private void writeCompanyFooterTable(final Document document, final CompanyDetails company, final Locale locale) throws DocumentException {
 
-        final float[] widths = { 20, 20, 20, 20 };
+        final float[] widths = {20, 20, 20, 20};
         final var table = new PdfPTable(widths);
 
         table.setSpacingBefore(21);
@@ -326,8 +323,7 @@ public class OpenPdfInvoiceGenerator implements PdfGenerationPort {
         nestedT3.addCell(nestedFooterCell(msg("invoice.pdf.placeOfJurisdiction", locale) + "\n" + company.placeOfJurisdiction()));
         nestedT3.addCell(nestedFooterCell(msg("invoice.pdf.companyId", locale) + " " + company.companyId()));
         nestedT3.addCell(nestedFooterCell(msg("invoice.pdf.ceoDirector", locale) + "\n" + company.ceoOrDirector()));
-        // todo uncomment once available
-//        nestedT3.addCell(nestedFooterCell(msg("invoice.pdf.vatId", locale) + " " + company.vatId()));
+        nestedT3.addCell(nestedFooterCell(msg("invoice.pdf.vatId", locale) + " " + company.vatId()));
         final var c3 = new PdfPCell(nestedT3);
         c3.setBorderWidth(0);
         table.addCell(c3);
@@ -446,15 +442,6 @@ public class OpenPdfInvoiceGenerator implements PdfGenerationPort {
         return c;
     }
 
-    private PdfPCell footerCell(final String text) {
-        final var cell = new PdfPCell(new Phrase(text, smallFont));
-        cell.setHorizontalAlignment(HorizontalAlignment.LEFT.getId());
-        cell.setBorderWidth(0);
-        cell.setPadding(4);
-        cell.setSpaceCharRatio(0);
-        return cell;
-    }
-
     private PdfPCell nestedFooterCell(final String text) {
         final var cell = new PdfPCell(new Phrase(text, smallFont));
         cell.setHorizontalAlignment(HorizontalAlignment.LEFT.getId());
@@ -463,7 +450,6 @@ public class OpenPdfInvoiceGenerator implements PdfGenerationPort {
         cell.setSpaceCharRatio(0);
         return cell;
     }
-
 
     private static String formatDecimal(final BigDecimal value) {
         return value == null ? "" : value.stripTrailingZeros().toPlainString();
