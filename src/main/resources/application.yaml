@@ -56,7 +56,7 @@ management:
         # The micrometer.registry.otlp package contains the interface OtlpMetricsSender.
         # However, there is no gRPC implementation of this interface in the current Micrometer release.
         # That's why we are limited to using HTTP for exporting metrics via OTLP.
-        enabled: true
+        enabled: false
         url: http://localhost:4318/v1/metrics
         step: 10s # how often to export metrics to the OTLP endpoint (e.g., every 10 seconds)
 
@@ -65,7 +65,7 @@ management:
       export:
         otlp:
           # setting the endpoint to a specific URL, enables the OTLP trace exporter, which is disabled by default.
-          endpoint: http://localhost:4317/v1/traces # URL to the OTel collector's HTTP API. (Note: gRPC uses HTTP/2)
+#          endpoint: http://localhost:4317/v1/traces # URL to the OTel collector's HTTP API. (Note: gRPC uses HTTP/2)
           transport: grpc # (default) Transport used to send the spans. (http or grpc)
           # setting the endpoint to a specific URL, enables the OTLP trace exporter, which is disabled by default.
           #endpoint: http://localhost:4318/v1/traces # URL to the OTel collector's HTTP API.
@@ -75,7 +75,7 @@ management:
       export:
         otlp:
           # setting the endpoint to a specific URL, enables the OTLP logging exporter, which is disabled by default.
-          endpoint: http://localhost:4317/v1/logs # URL to the OTel collector's HTTP API. (Note: gRPC uses HTTP/2)
+#          endpoint: http://localhost:4317/v1/logs # URL to the OTel collector's HTTP API. (Note: gRPC uses HTTP/2)
           transport: grpc
           # setting the endpoint to a specific URL, enables the OTLP logging exporter, which is disabled by default.
           #endpoint: http://localhost:4318/v1/logs # URL to the OTel collector's HTTP API.
